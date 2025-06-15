@@ -1,0 +1,348 @@
+basePath: /api
+definitions:
+  entity.OrderStatus:
+    enum:
+    - NEW
+    - PROCESSING
+    - INVALID
+    - PROCESSED
+    type: string
+    x-enum-varnames:
+    - OrderNewStatus
+    - OrderProcessingStatus
+    - OrderInvalidStatus
+    - OrderProcessedStatus
+  entity.UserBalance:
+    properties:
+      current:
+        example: 500.5
+        type: number
+      user_id:
+        example: UUID
+        type: string
+      withdrawn:
+        example: 42
+        type: number
+    type: object
+  entity.UserOrder:
+    properties:
+      accrual:
+        type: number
+      id:
+        type: string
+      number:
+        type: string
+      status:
+        $ref: '#/definitions/entity.OrderStatus'
+      uploaded_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  entity.UserWithdrawal:
+    properties:
+      id:
+        type: string
+      order:
+        type: string
+      processed_at:
+        type: string
+      sum:
+        type: number
+      user_id:
+        type: string
+    type: object
+  request.LoginUser:
+    properties:
+      login:
+        example: login
+        maxLength: 100
+        type: string
+      password:
+        example: password
+        maxLength: 72
+        minLength: 8
+        type: string
+    required:
+    - login
+    - password
+    type: object
+  request.RegisterUser:
+    properties:
+      login:
+        example: login
+        maxLength: 100
+        type: string
+      password:
+        example: password
+        maxLength: 72
+        minLength: 8
+        type: string
+    required:
+    - login
+    - password
+    type: object
+  request.WithdrawBalance:
+    properties:
+      order:
+        maxLength: 100
+        type: string
+      sum:
+        type: number
+    required:
+    - order
+    - sum
+    type: object
+  response.Error:
+    properties:
+      error:
+        type: string
+    type: object
+  response.LoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+host: localhost:80
+info:
+  contact: {}
+  description: Service for orders
+  title: Gophermart
+  version: "1.0"
+paths:
+  /user/balance:
+    get:
+      description: Retrieve user balance
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.UserBalance'
+        "401":
+          description: User is not authenticated
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Server encountered a problem
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - AuthToken: []
+      summary: User balance
+      tags:
+      - user
+  /user/balance/withdraw:
+    post:
+      consumes:
+      - application/json
+      description: Request for withdrawing user balance
+      parameters:
+      - description: Order number and amount
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/request.WithdrawBalance'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: User is not authenticated
+          schema:
+            $ref: '#/definitions/response.Error'
+        "402":
+          description: Balance is not enough
+          schema:
+            $ref: '#/definitions/response.Error'
+        "422":
+          description: Wrong order number format
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Server encountered a problem
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - AuthToken: []
+      summary: Withdraw balance
+      tags:
+      - user
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates user with given login and password
+      parameters:
+      - description: User credentials
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/request.LoginUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.LoginResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/response.Error'
+        "401":
+          description: Wrong login/password
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Server encountered a problem
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Login user
+      tags:
+      - auth
+  /user/orders:
+    get:
+      description: Get user orders
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.UserOrder'
+            type: array
+        "204":
+          description: Data is empty
+          schema:
+            $ref: '#/definitions/response.Error'
+        "401":
+          description: User is not authenticated
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Server encountered a problem
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - AuthToken: []
+      summary: Get user orders
+      tags:
+      - orders
+    post:
+      consumes:
+      - text/plain
+      description: Load order for future processing
+      parameters:
+      - description: Order number
+        in: body
+        name: orderNumber
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order was already loaded
+          schema:
+            $ref: '#/definitions/response.Error'
+        "202":
+          description: Accepted
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/response.Error'
+        "401":
+          description: User is not authenticated
+          schema:
+            $ref: '#/definitions/response.Error'
+        "409":
+          description: Order was loaded by another user
+          schema:
+            $ref: '#/definitions/response.Error'
+        "422":
+          description: Wrong order number format
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Server encountered a problem
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - AuthToken: []
+      summary: Load order
+      tags:
+      - orders
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user with given login and password
+      parameters:
+      - description: User credentials
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/request.RegisterUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/response.Error'
+        "409":
+          description: Resource already exists
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Server encountered a problem
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Register new user
+      tags:
+      - auth
+  /user/withdrawals:
+    get:
+      description: Gets user withdrawals
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.UserWithdrawal'
+            type: array
+        "204":
+          description: Data is empty
+          schema:
+            $ref: '#/definitions/response.Error'
+        "401":
+          description: User is not authenticated
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Server encountered a problem
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - AuthToken: []
+      summary: User withdrawals
+      tags:
+      - user
+securityDefinitions:
+  AuthToken:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

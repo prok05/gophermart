@@ -1,0 +1,63 @@
+x-db-environment: &x-db-environment
+  POSTGRES_SSL_MODE: "disable"
+  POSTGRES_HOST: "db"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "gophermart"
+  POSTGRES_USER: "admin"
+  POSTGRES_PASSWORD: "admin"
+
+x-backend-app-environment: &x-backend-app-environment
+  # App
+  APP_NAME: "gophermart"
+  APP_VERSION: "1.0.0"
+  APP_ENVIRONMENT: "development"
+  # HTTP settings
+  HTTP_PORT: "8080"
+  # Logger
+  LOG_LEVEL: "debug"
+  # PG
+  PG_POOL_MAX: "2"
+  PG_URL: "postgres://admin:admin@db:5432/gophermart"
+  # JWT
+  JWT_SECRET: "secretKey"
+  JWT_EXP_DAYS: "3"
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: gophermart-db
+    environment:
+      <<: *x-db-environment
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      app_network:
+        aliases:
+          - db.lvh.me
+
+  app:
+    container_name: app
+    platform: linux/amd64
+    pid: "host"
+    build:
+      context: .
+    environment:
+      <<: *x-backend-app-environment
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      - db
+    networks:
+      app_network:
+        aliases:
+          - app.lvh.me
+
+networks:
+  app_network:
+    external: false
+
+volumes:
+  db-data:
