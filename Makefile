@@ -1,5 +1,11 @@
+ifneq ($(wildcard .env),)
 include .env
 export
+else
+$(warning WARNING: .env file not found! Using .env.example)
+include .env.example
+export
+endif
 
 BASE_STACK = docker compose -f docker-compose.yml
 
