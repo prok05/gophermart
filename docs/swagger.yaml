@@ -42,14 +42,19 @@ definitions:
   entity.UserWithdrawal:
     properties:
       id:
+        example: UUID
         type: string
       order:
+        example: "2377225624"
         type: string
       processed_at:
+        example: "2020-12-09T16:09:57+03:00"
         type: string
       sum:
+        example: 500
         type: number
       user_id:
+        example: UUID
         type: string
     type: object
   request.LoginUser:
@@ -85,9 +90,11 @@ definitions:
   request.WithdrawBalance:
     properties:
       order:
+        example: "2377225624"
         maxLength: 100
         type: string
       sum:
+        example: 751
         type: number
     required:
     - order
@@ -101,6 +108,7 @@ definitions:
   response.LoginResponse:
     properties:
       token:
+        example: token
         type: string
     type: object
 host: localhost:80

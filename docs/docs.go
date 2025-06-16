@@ -436,19 +436,24 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "UUID"
                 },
                 "order": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2377225624"
                 },
                 "processed_at": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2020-12-09T16:09:57+03:00"
                 },
                 "sum": {
-                    "type": "number"
+                    "type": "number",
+                    "example": 500
                 },
                 "user_id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "UUID"
                 }
             }
         },
@@ -501,10 +506,12 @@ const docTemplate = `{
             "properties": {
                 "order": {
                     "type": "string",
-                    "maxLength": 100
+                    "maxLength": 100,
+                    "example": "2377225624"
                 },
                 "sum": {
-                    "type": "number"
+                    "type": "number",
+                    "example": 751
                 }
             }
         },
@@ -520,7 +527,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "token": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "token"
                 }
             }
         }
